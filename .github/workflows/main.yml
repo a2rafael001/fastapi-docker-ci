@@ -16,7 +16,7 @@ jobs:
       run: docker build -t fastapi-app .
 
     - name: Run container and test inside it
-      run: |
+      run: docker run --rm fastapi-app sh -c "PYTHONPATH=./src pytest tests/"
        docker run --rm fastapi-app pytest tests/
 
         docker run --rm fastapi-app pytest tests/
