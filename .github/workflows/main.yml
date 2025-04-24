@@ -1,26 +1,20 @@
-name: FastAPI CI
+name: FastAPI CI/CD
 
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-    - name: 🛒 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: 🐍 Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+    - name: Build Docker image
+      run: docker build -t fastapi-app .
 
-    - name: 📦 Install dependencies
+    - name: Run container and test inside it
       run: |
-        pip install -r app/requirements.txt
-        pip install pytest pytest-asyncio
-
-    - name: 🧪 Run tests
-      run: pytest tests/
+        docker run --rm fastapi-app pytest tests/
