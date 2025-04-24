@@ -4,4 +4,4 @@ pytest
 pytest-asyncio
 httpx
 sqlalchemy
-psycopg
+psycopg-binary
