@@ -3,7 +3,17 @@ FROM python:3.11-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev libpq  libpq-dev python3-dev
+# Устанавливаем нужные библиотеки для сборки psycopg[c]
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libpq \
+    libpq-dev \
+    python3-dev \
+    postgresql-dev \
+    build-base \
+    cargo \
+    rust
 
 COPY requirements.txt .
 RUN pip install --user -r requirements.txt
@@ -13,6 +23,9 @@ FROM python:3.11-alpine
 
 ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /app
+
+# Ставим runtime зависимости
+RUN apk add --no-cache libpq
 
 COPY --from=builder /root/.local /root/.local
 COPY src/ /app/src/
