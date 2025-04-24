@@ -12,11 +12,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Build Docker image
-      run: docker build -t fastapi-app .
-
-    - name: Run container and test inside it
-      run: docker run --rm fastapi-app sh -c "PYTHONPATH=/app pytest tests/"
-       docker run --rm fastapi-app pytest tests/
-
-        docker run --rm fastapi-app pytest tests/
+    - name: Set up Docker Compose
+      run: |
+        docker-compose up --build --abort-on-container-exit
