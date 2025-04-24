@@ -3,7 +3,7 @@ FROM python:3.11-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev libpq-dev python3-dev
+RUN apk add --no-cache gcc musl-dev libpq  libpq-dev python3-dev
 
 COPY requirements.txt .
 RUN pip install --user -r requirements.txt
