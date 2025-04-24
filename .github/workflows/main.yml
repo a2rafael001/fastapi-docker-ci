@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -17,4 +17,6 @@ jobs:
 
     - name: Run container and test inside it
       run: |
+       docker run --rm fastapi-app pytest tests/
+
         docker run --rm fastapi-app pytest tests/
