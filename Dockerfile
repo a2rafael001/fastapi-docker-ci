@@ -15,8 +15,9 @@ RUN apk add --no-cache \
     cargo \
     rust
 
-COPY requirements.txt .
-RUN pip install --user -r requirements.txt
+
+RUN python -m venv /app/venv
+COPY pyproject.toml /app
 
 # --- Stage 2: Final image ---
 FROM python:3.11-alpine
