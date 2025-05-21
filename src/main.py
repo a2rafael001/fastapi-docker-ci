@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from src import models, schemas
 from src.database import init_db, get_db
 
-app = FastAPI()
+app = FastAPI(root_path="dijkstra")
 
 
 @app.on_event("startup")

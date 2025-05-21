@@ -31,6 +31,6 @@ COPY --from=builder /root/.local /root/.local
 COPY src/ /app/src/
 COPY tests/ /app/tests/
 
-EXPOSE 58529
+EXPOSE 8048
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "58529"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
