@@ -45,4 +45,4 @@ COPY src/ /app/src/
 COPY tests/ /app/tests/
 
 EXPOSE 8048
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
