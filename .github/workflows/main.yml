@@ -2,7 +2,7 @@ name: FastAPI CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   build-test:
