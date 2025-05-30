@@ -1,0 +1,29 @@
+name: FastAPI CI/CD
+
+on:
+  push:
+    branches: [dev, main]
+
+jobs:
+  docker-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build & Test (dev) / Build only (main)
+      run: |
+        if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+          # Переопределяем команду на pytest
+          echo 'services:
+  app:
+    command: ["pytest", "-q", "tests"]' | tee override.yml
+          docker compose -f docker-compose.yml -f override.yml up --build --abort-on-container-exit
+        else
+          # main-ветка: просто собираем и пушим образ,
+          # тут же можно добавить deploy (scp/ssh/kubernetes/etc.)
+          docker build -t fastapi-app:${{ github.sha }} .
+        fi

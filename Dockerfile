@@ -1,48 +1,41 @@
 ########################
-# Stage 1 — build deps #
+# Stage 1 – builder    #
 ########################
 FROM python:3.11-alpine AS builder
-
 WORKDIR /app
 
-# Системные библиотеки (gcc, rust, libpq) нужны для сборки psycopg[c]
+# Всё, что нужно, чтобы собрать psycopg[c] и т.п.
 RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    libpq \
-    libpq-dev \
-    python3-dev \
-    postgresql-dev \
-    build-base \
-    cargo \
-    rust
+        gcc musl-dev libpq libpq-dev \
+        python3-dev postgresql-dev build-base cargo rust
 
-# Копируем файл зависимостей
-COPY pyproject.toml /app/
+# Копируем pyproject + исходники, чтобы pip видел package
+COPY pyproject.toml .
+COPY src ./src
 
-# Устанавливаем зависимости проекта в /root/.local
+# Ставим runtime + test-deps (секция [project.optional-dependencies.test])
 RUN pip install --upgrade pip \
- && pip install --user .
+ && pip install --user ".[test]"
 
-##############################
-# Stage 2 — минимальный образ #
-##############################
+########################
+# Stage 2 – runtime    #
+########################
 FROM python:3.11-alpine
-
 WORKDIR /app
-ENV PATH="/root/.local/bin:$PATH"
 
-# Runtime-зависимость libpq
+# libpq — runtime зависимость psycopg
 RUN apk add --no-cache libpq
 
-# Берём установленную python-часть из билдера
+ENV PATH="/root/.local/bin:${PATH}" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Перетаскиваем установленные пакеты
 COPY --from=builder /root/.local /root/.local
-
-# Копируем исходники приложения
-COPY src/ /app/src/
-
-# (Тесты копируем только если они нужны в runtime — можно убрать)
-COPY tests/ /app/tests/
+# Код
+COPY src ./src
+# Тесты нужны только в CI, но они малы — копируем
+COPY tests ./tests
 
 EXPOSE 8048
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]

@@ -4,15 +4,11 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: kubsu
-      POSTGRES_USER: kubsu
-      POSTGRES_PASSWORD: kubsu
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "kubsu"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
-      timeout: 5s
       retries: 5
 
   app:
@@ -21,6 +17,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://kubsu:kubsu@db:5432/kubsu
-    command: >
-      sh -c "PYTHONPATH=/app pytest tests/"
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/postgres
+    ports:
+      - "8048:8048"
+       command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
