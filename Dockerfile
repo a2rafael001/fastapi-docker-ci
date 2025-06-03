@@ -9,7 +9,8 @@ RUN apk add --no-cache \
         gcc musl-dev libpq libpq-dev \
         python3-dev postgresql-dev build-base cargo rust
 
-COPY pyproject.toml .          # файл-манифест
+COPY pyproject.toml .
+          # файл-манифест
 # исходники нужны для «editable»-установки KubSU
 COPY src ./src
 
@@ -30,7 +31,8 @@ ENV PATH="/root/.local/bin:${PATH}" \
 
 COPY --from=builder /root/.local /root/.local
 COPY src ./src
-COPY tests ./tests     # тесты малы – можно оставить
+COPY tests ./tests
+     # тесты малы – можно оставить
 
 EXPOSE 8048
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
