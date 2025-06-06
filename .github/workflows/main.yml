@@ -1,22 +1,50 @@
-name: FastAPI CI/CD
+  name: FastAPI CI/CD
 
-on:
-  push:
-    branches: [main, dev]
+  on:
+    push:
+      branches:
+        - dev
+        - main
 
-jobs:
-  build-test:
-    runs-on: ubuntu-latest
+  jobs:
+    build-test:
+      runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
-    - name: Set up Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version
+        - name: Set up Docker Compose
+          run: |
+            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+              -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            docker-compose --version
 
-    - name: Run tests with Docker Compose
-      run: docker-compose up --build --abort-on-container-exit
+        - name: Build & Test (dev) / Build only (main)
+          run: |
+            # Проверяем, в какой мы ветке
+            if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+              echo ">>> Running tests in DEV branch <<<"
+
+            # Формируем override-файл без лишних отступов для here-document
+              cat << 'EOF' > override.yml
+  version: "3.9"
+  services:
+    app:
+      command: ["pytest", "-q", "tests"]
+      environment:
+        DATABASE_URL: sqlite+aiosqlite:///./test.db
+  EOF
+
+            # Запускаем docker-compose с двумя yml:
+            #   1) базовый docker-compose.yml (где command=uvicorn)
+            #   2) override.yml (где command=pytest)
+              docker-compose -f docker-compose.yml -f override.yml up \
+                --build --abort-on-container-exit
+
+            else
+              echo ">>> Building Docker image in MAIN branch (no tests) <<<"
+            # Просто собираем образ и выходим
+              docker build -t fastapi-app:${{ github.sha }} .
+            fi
