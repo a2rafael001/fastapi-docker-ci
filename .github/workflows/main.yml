@@ -11,7 +11,7 @@ jobs:
       postgres:
         image: postgres:15-alpine
         ports:
-          - "8048:8048"
+          - "5432:5432"
         env:
           POSTGRES_DB: kubsu
           POSTGRES_USER: kubsu
