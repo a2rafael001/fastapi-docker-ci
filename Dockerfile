@@ -1,36 +1,29 @@
-# --- Stage 1: Build environment ---
-FROM python:3.11-alpine AS builder
+FROM python:3.11-alpine as builder
 
 WORKDIR /app
 
-# Устанавливаем нужные библиотеки для сборки psycopg[c]
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    libpq \
-    libpq-dev \
-    python3-dev \
-    postgresql-dev \
-    build-base \
-    cargo \
-    rust
+RUN apk add --no-cache python3-dev py3-pip gcc musl-dev
 
-COPY requirements.txt .
-RUN pip install --user -r requirements.txt
+RUN python -m venv /app/venv
 
-# --- Stage 2: Final image ---
+ENV PATH="/app/venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+
+COPY pyproject.toml /app
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
+
+
 FROM python:3.11-alpine
 
-ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /app
 
-# Ставим runtime зависимости
-RUN apk add --no-cache libpq
+COPY --from=builder /app/venv /app/venv
+COPY src /app/src
 
-COPY --from=builder /root/.local /root/.local
-COPY src/ /app/src/
-COPY tests/ /app/tests/
+ENV PATH="/app/venv/bin:$PATH"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8048
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8048"]
+CMD [ "uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "8048" ]
