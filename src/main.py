@@ -3,13 +3,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from src import models, schemas
 from src.database import init_db, get_db
+from contextlib import asynccontextmanager
 
-app = FastAPI(root_path="dijkstra")
 
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await init_db()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/users/", response_model=schemas.User)

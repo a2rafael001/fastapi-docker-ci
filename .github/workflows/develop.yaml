@@ -1,0 +1,83 @@
+name: Developing
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  test:
+    runs-on: self-hosted
+    services:
+      postgres:
+        image: postgres:15-alpine
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_DB: kubsu
+          POSTGRES_USER: kubsu
+          POSTGRES_PASSWORD: kubsu
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile.dev
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/python_app_dev:latest
+          load: true
+
+      - name: Run tests
+        run: |
+          docker run --rm --network=host ${{ vars.DOCKERHUB_USERNAME }}/python_app_dev:latest
+
+  push:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          file: ./Dockerfile.dev
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/python_app_dev:latest
+
+      - name: Push to master
+        if: success()
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git fetch origin master
+          git checkout master
+          git merge --ff-only dev
+          git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
