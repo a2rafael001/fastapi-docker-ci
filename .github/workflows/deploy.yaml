@@ -94,3 +94,5 @@ jobs:
             # Run new container
             podman run -d --name python_app_prod --network host ${{ vars.DOCKERHUB_USERNAME }}/python_app_prod:latest
             echo "Container has been deployed successfully!"
+
+            
